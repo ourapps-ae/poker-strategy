@@ -1,0 +1,65 @@
+{
+  "id": "player-strategy",
+  "type": "ae/player-strategy",
+  "version": "1.0.0",
+  "types": {
+    "Action": "{type:'fold'}|{type:'check'}|{type:'call'}|{type:'bet',to:number}; bet carries the total for the street",
+    "Style": "{tight:number,aggr:number,bluff:number}, each 0 to 1; which player has which style belongs to the caller",
+    "DecisionInput": "{hole,board,street,stack,bet,seat,button,seats,sb,bb,currentBet,lastFullRaiseTo,pot,legal:{fold,check,call,bet:{min,max,opening}|null},opponents:{id,seat,bet,totalIn,lastAction}[],style?}",
+    "StrategyMemory": "Record<playerId,{actions,aggressive,calls,folds,vpip,handsSeen}>, owned and stored by the caller",
+    "Street": "'preflop'|'flop'|'turn'|'river'"
+  },
+  "operations": {
+    "newMemory": {
+      "arguments": [],
+      "returns": "StrategyMemory (a fresh empty memory, plain JSON)"
+    },
+    "choose": {
+      "arguments": [
+        "observation:DecisionInput|null",
+        "playerId:string",
+        "rng:()=>number",
+        "memory?:StrategyMemory"
+      ],
+      "returns": "Action|null (decide for an observation; null when there is no observation, it is not this player's turn, or the value is not a DecisionInput; never changes memory)"
+    },
+    "decide": {
+      "arguments": [
+        "input:DecisionInput",
+        "rng:()=>number",
+        "memory?:StrategyMemory"
+      ],
+      "returns": "Action|null (null when legal.fold is false, that is when it is not this player's turn; a bet is always inside legal.bet)"
+    },
+    "observe": {
+      "arguments": [
+        "memory:StrategyMemory",
+        "observation:{street?:Street|null}|null",
+        "playerId:string",
+        "move:unknown"
+      ],
+      "returns": "StrategyMemory (the same object, changed in place; moves that are not fold, check, call or bet, such as show, are ignored)"
+    },
+    "learnHand": {
+      "arguments": [
+        "memory:StrategyMemory",
+        "playerIds:string[]"
+      ],
+      "returns": "void"
+    }
+  },
+  "settings": {
+    "difficulty": "integer 1 to 3; 1 samples little and ignores opponent reads, 2 is the recipe's reference player, 3 samples more and plays steadier",
+    "aggression": "integer 0 to 100; used when a Style gives no aggr"
+  },
+  "construction": {
+    "createStrategy": {
+      "arguments": [
+        "deps:{odds:{winChance(...)}}",
+        "settings?:{difficulty,aggression}"
+      ],
+      "returns": "Strategy"
+    }
+  },
+  "notes": "The computer-players form is newMemory(), choose(observation, playerId, rng, memory) and observe(memory, observation, playerId, move): `observation` is a DecisionInput (what holdem-rules' observation returns for that player) and a move is an Action. decide(input, rng, memory) is choose without the player id."
+}

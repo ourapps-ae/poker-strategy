@@ -1,0 +1,101 @@
+{
+  "name": "poker-strategy",
+  "version": "0.3.0",
+  "title": "Poker strategy",
+  "description": "Decisions for computer poker players: win chance by simulation, pot odds, position, a style and a memory of how each opponent has played. Difficulty 1 to 3 and aggression.",
+  "facilities": [
+    {
+      "id": "player-strategy",
+      "description": "Decide fold, check, call or bet for a computer player"
+    }
+  ],
+  "provides": [
+    {
+      "id": "player-strategy",
+      "type": "ae/player-strategy",
+      "version": "1.0.0",
+      "path": "interfaces/player-strategy.json"
+    }
+  ],
+  "requires": [
+    {
+      "id": "hand-ranking",
+      "type": "ae/hand-ranking",
+      "version": "1.0.0",
+      "path": "interfaces/required/hand-ranking.json"
+    },
+    {
+      "id": "poker-odds",
+      "type": "ae/poker-odds",
+      "version": "1.0.0",
+      "path": "interfaces/required/poker-odds.json"
+    }
+  ],
+  "collect": [
+    {
+      "id": "difficulty",
+      "type": "integer",
+      "grammar": "integer",
+      "required": false,
+      "secret": false,
+      "default": 2
+    },
+    {
+      "id": "aggression",
+      "type": "integer",
+      "grammar": "integer",
+      "required": false,
+      "secret": false,
+      "default": 50
+    }
+  ],
+  "dependencies": [],
+  "suites": [
+    {
+      "id": "web",
+      "argv": [
+        "node",
+        "--test",
+        "tests/server.test.ts"
+      ],
+      "tools": {
+        "node": "26.5.0"
+      }
+    }
+  ],
+  "tools": {
+    "node": "26.5.0"
+  },
+  "platforms": [
+    "server"
+  ],
+  "text": {
+    "purpose": "Given what a computer player can see at its turn (its cards, the board, the pot, what the rules allow, who is still in and how they have acted) returns fold, check, call or a bet to a total. The decision weighs the simulated chance of winning against pot odds, the share of the stack a call would cost, position, the street, a little noise and how aggressive each opponent has been so far. Before the flop it adds raise, call and all-in thresholds for short stacks. It does not choose names, schedule when a bot acts or apply the action: those belong to computer-players and the engine.",
+    "userInputs": "The installer collects two optional integers:",
+    "integration": "Create it with `createStrategy({ odds }, { difficulty, aggression })`, where `odds` is the poker-odds interface (which itself needs hand-ranking). computer-players calls `decide` when it is a bot's turn and applies the returned action through the game rules; it calls `observe` after every action and `learnHand` after each deal, keeping the memory object between calls. The caller gives each bot an optional style (tight, aggr, bluff from 0 to 1); without one the style is neutral and aggression comes from the setting. computer-players uses the three-operation form: `newMemory()` for a fresh memory, `choose(observation, playerId, rng, memory)` (the observation is the `DecisionInput` the game rules give for that player; null or anything else is no decision) and `observe(memory, observation, playerId, move)` after every move (counts the mover and returns the memory). `decide(input, rng, memory)` is `choose` without the player id.",
+    "infrastructure": "No deployed service, account or key. CPU only: a decision samples 200 to 900 boards (difficulty 2: 200 before the flop, 300 after) in a few milliseconds.",
+    "verification": "`node --test tests/server.test.ts` checks turn handling, setting validation, bet sizing, clamping to the legal range and rounding to the small blind, calling and folding against pot odds, short-stack pushing, the effect of aggression and style, the sampling and range reading of each difficulty, memory-based reads, observe and learnHand counts, and real-odds decisions. The extraction at difficulty 2 was compared with the recipe's botAction on 400 random spots (all streets, short and deep stacks, with and without memory and styles): identical actions with the same random sequence. It also checks `newMemory`, `choose` (the same move as `decide`, null for nothing to decide, memory unchanged, bets inside the legal range with real odds) and `observe` (counts per mover, ignored moves, plain-JSON memory).",
+    "scenarios": "A table of four people and two computer players: each computer player is given a style by name, decides in its turn and its action is applied. A teaching table sets difficulty 1 for gentle opponents. A tournament raises difficulty to 3 for the final table.",
+    "updates": "Removing the component removes the files; the memory object is owned by the caller."
+  },
+  "agentInstructions": "Select this component when the recipe includes computer players. Connect its hand-ranking and poker-odds inputs, and connect its player-strategy output to computer-players. Map the recipe's 'computer players' difficulty answer to `difficulty` and a general 'how bold' answer to `aggression`.",
+  "developerInstructions": "No accounts or keys. `difficulty` is 1, 2 or 3 (default 2, the recipe's reference strength). `aggression` is 0 to 100 (default 50), used when a bot has no style of its own. Keep one memory object per room and store it with the room if bots should remember across a restart.",
+  "suitability": {
+    "format": 1,
+    "jobs": [
+      "poker-strategy"
+    ],
+    "profiles": [
+      {
+        "id": "any",
+        "load": {},
+        "cost": "none",
+        "regions": [
+          "any"
+        ],
+        "compliance": []
+      }
+    ],
+    "notes": "Pure library, CPU only. No hosted service, account or provider limit applies; a decision is milliseconds of simulation."
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "id": "hand-ranking",
+  "type": "ae/hand-ranking",
+  "version": "1.0.0",
+  "notes": "No operation of hand-ranking is called. createStrategy takes only the odds object, which is built over a hand ranking; the port is declared so a recipe shows what the odds object stands on.",
+  "operations": {
+    "evaluate": {
+      "arguments": ["cards:Card[]"],
+      "returns": "Evaluation (documentation only; poker-strategy never calls it)"
+    }
+  }
+}

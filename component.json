@@ -1,0 +1,247 @@
+{
+  "format": 1,
+  "kind": "component",
+  "identity": {
+    "name": "ourapps-ae/poker-strategy",
+    "version": "0.3.0",
+    "sourceRevision": "19905b75dbea89fbfd424d67fe26c81aaed0e018",
+    "sourceTreeDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+    "licenceStatus": "deferred"
+  },
+  "facilities": [
+    {
+      "id": "player-strategy",
+      "description": "Decide fold, check, call or bet for a computer player"
+    }
+  ],
+  "documents": {
+    "contract": "CONTRACT.md",
+    "interfaces": [
+      "interfaces/player-strategy.json",
+      "interfaces/required/hand-ranking.json",
+      "interfaces/required/poker-odds.json",
+      "suitability.json"
+    ],
+    "examples": [
+      "examples/consumer.ts"
+    ],
+    "licenceNotice": "LICENCE"
+  },
+  "collect": [
+    {
+      "id": "difficulty",
+      "type": "integer",
+      "grammar": "integer",
+      "required": false,
+      "secret": false,
+      "default": 2
+    },
+    {
+      "id": "aggression",
+      "type": "integer",
+      "grammar": "integer",
+      "required": false,
+      "secret": false,
+      "default": 50
+    }
+  ],
+  "files": [
+    {
+      "path": "CONTRACT.md",
+      "executable": false
+    },
+    {
+      "path": "INSTRUCTIONS.md",
+      "executable": false
+    },
+    {
+      "path": "LICENCE",
+      "executable": false
+    },
+    {
+      "path": "SOURCE.md",
+      "executable": false
+    },
+    {
+      "path": "examples/consumer.ts",
+      "executable": false
+    },
+    {
+      "path": "implementation/server/index.ts",
+      "executable": false
+    },
+    {
+      "path": "implementation/server/strategy.ts",
+      "executable": false
+    },
+    {
+      "path": "implementation/server/types.ts",
+      "executable": false
+    },
+    {
+      "path": "interfaces/player-strategy.json",
+      "executable": false
+    },
+    {
+      "path": "interfaces/required/hand-ranking.json",
+      "executable": false
+    },
+    {
+      "path": "interfaces/required/poker-odds.json",
+      "executable": false
+    },
+    {
+      "path": "suitability.json",
+      "executable": false
+    },
+    {
+      "path": "tests/server.test.ts",
+      "executable": false
+    },
+    {
+      "path": "tests/support/hand-ranking/codes.ts",
+      "executable": false
+    },
+    {
+      "path": "tests/support/hand-ranking/ranking.ts",
+      "executable": false
+    },
+    {
+      "path": "tests/support/odds.ts",
+      "executable": false
+    },
+    {
+      "path": "tests/support/poker-odds/odds.ts",
+      "executable": false
+    },
+    {
+      "path": "tests/support/poker-odds/types.ts",
+      "executable": false
+    },
+    {
+      "path": "tools.lock.json",
+      "executable": false
+    },
+    {
+      "path": "visual/definition.json",
+      "executable": false
+    },
+    {
+      "path": "visual/examples/connected.json",
+      "executable": false
+    },
+    {
+      "path": "visual/output/connected.png",
+      "executable": false
+    },
+    {
+      "path": "visual/output/connected.svg",
+      "executable": false
+    },
+    {
+      "path": "visual/output/description.md",
+      "executable": false
+    }
+  ],
+  "artefacts": [
+    {
+      "source": "implementation/server/index.ts",
+      "destination": "components/poker-strategy/server/index.ts",
+      "template": false,
+      "executable": false
+    },
+    {
+      "source": "implementation/server/strategy.ts",
+      "destination": "components/poker-strategy/server/strategy.ts",
+      "template": false,
+      "executable": false
+    },
+    {
+      "source": "implementation/server/types.ts",
+      "destination": "components/poker-strategy/server/types.ts",
+      "template": false,
+      "executable": false
+    }
+  ],
+  "dependencies": [],
+  "provides": [
+    {
+      "id": "player-strategy",
+      "type": "ae/player-strategy",
+      "version": "1.0.0",
+      "path": "interfaces/player-strategy.json"
+    }
+  ],
+  "requires": [
+    {
+      "id": "hand-ranking",
+      "type": "ae/hand-ranking",
+      "version": "1.0.0",
+      "path": "interfaces/required/hand-ranking.json"
+    },
+    {
+      "id": "poker-odds",
+      "type": "ae/poker-odds",
+      "version": "1.0.0",
+      "path": "interfaces/required/poker-odds.json"
+    }
+  ],
+  "visual": {
+    "definition": "visual/definition.json",
+    "examples": [
+      "visual/examples/connected.json"
+    ],
+    "outputs": [
+      "visual/output/connected.svg",
+      "visual/output/connected.png"
+    ],
+    "descriptions": [
+      "visual/output/description.md"
+    ]
+  },
+  "capabilities": {
+    "hosts": [],
+    "secrets": [],
+    "writes": [
+      "components/poker-strategy/server/index.ts",
+      "components/poker-strategy/server/strategy.ts",
+      "components/poker-strategy/server/types.ts"
+    ]
+  },
+  "infrastructure": {
+    "accounts": [],
+    "costStatus": "unmeasured",
+    "deployedReason": "No deployed service; injected resources and local library functions only."
+  },
+  "verification": [
+    {
+      "id": "web",
+      "root": "package",
+      "argv": [
+        "node",
+        "--test",
+        "tests/server.test.ts"
+      ],
+      "cwd": ".",
+      "prepare": [],
+      "tools": {
+        "node": "26.5.0"
+      },
+      "fixtures": [
+        "examples/consumer.ts"
+      ],
+      "locks": [
+        "tools.lock.json"
+      ],
+      "network": false,
+      "timeoutSeconds": 120,
+      "expectedExit": 0,
+      "scope": "required-local",
+      "requirements": []
+    }
+  ],
+  "upgrade": {
+    "policy": "patch",
+    "migration": "files-only"
+  }
+}

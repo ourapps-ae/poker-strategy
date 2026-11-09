@@ -1,0 +1,18 @@
+{
+  "format": 1,
+  "jobs": [
+    "poker-strategy"
+  ],
+  "profiles": [
+    {
+      "id": "any",
+      "load": {},
+      "cost": "none",
+      "regions": [
+        "any"
+      ],
+      "compliance": []
+    }
+  ],
+  "notes": "Pure library, CPU only. No hosted service, account or provider limit applies; a decision is milliseconds of simulation."
+}

@@ -1,0 +1,56 @@
+{
+  "id": "ourapps-ae.poker-strategy",
+  "name": "Poker strategy",
+  "kind": "component",
+  "status": "example",
+  "package": "ourapps-ae/poker-strategy",
+  "version": "0.3.0",
+  "ports": [
+    {
+      "id": "hand-ranking",
+      "name": "Hand ranking",
+      "direction": "input",
+      "kind": "interface",
+      "type": "ae/hand-ranking",
+      "version": "1.0.0",
+      "required": true,
+      "cardinality": "one"
+    },
+    {
+      "id": "poker-odds",
+      "name": "Poker odds",
+      "direction": "input",
+      "kind": "interface",
+      "type": "ae/poker-odds",
+      "version": "1.0.0",
+      "required": true,
+      "cardinality": "one"
+    },
+    {
+      "id": "player-strategy",
+      "name": "Player strategy",
+      "direction": "output",
+      "kind": "interface",
+      "type": "ae/player-strategy",
+      "version": "1.0.0"
+    }
+  ],
+  "settings": [
+    {
+      "id": "difficulty",
+      "name": "Difficulty",
+      "type": "number",
+      "required": false,
+      "secret": false,
+      "default": 2
+    },
+    {
+      "id": "aggression",
+      "name": "Aggression",
+      "type": "number",
+      "required": false,
+      "secret": false,
+      "default": 50
+    }
+  ]
+}
