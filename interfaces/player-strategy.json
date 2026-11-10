@@ -1,65 +1,725 @@
 {
-  "id": "player-strategy",
-  "type": "ae/player-strategy",
-  "version": "1.0.0",
-  "types": {
-    "Action": "{type:'fold'}|{type:'check'}|{type:'call'}|{type:'bet',to:number}; bet carries the total for the street",
-    "Style": "{tight:number,aggr:number,bluff:number}, each 0 to 1; which player has which style belongs to the caller",
-    "DecisionInput": "{hole,board,street,stack,bet,seat,button,seats,sb,bb,currentBet,lastFullRaiseTo,pot,legal:{fold,check,call,bet:{min,max,opening}|null},opponents:{id,seat,bet,totalIn,lastAction}[],style?}",
-    "StrategyMemory": "Record<playerId,{actions,aggressive,calls,folds,vpip,handsSeen}>, owned and stored by the caller",
-    "Street": "'preflop'|'flop'|'turn'|'river'"
+  "openrpc": "1.3.2",
+  "info": {
+    "title": "ae/player-strategy",
+    "version": "1.0.0",
+    "description": "Decisions for computer poker players: win chance by simulation, pot odds, position, a style (how tight, how aggressive, how often it bluffs) and a memory of how each opponent has played. Pure: the table state arrives as a DecisionInput, randomness as a function, the result is an action. TypeScript, `implementation/server/index.ts` (strategy.ts, types.ts). Build with createStrategy({odds}, settings); methods named `Strategy.<name>` are members of the object it returns. The computer-players form is newMemory, choose and observe; decide is choose without the player id."
   },
-  "operations": {
-    "newMemory": {
-      "arguments": [],
-      "returns": "StrategyMemory (a fresh empty memory, plain JSON)"
-    },
-    "choose": {
-      "arguments": [
-        "observation:DecisionInput|null",
-        "playerId:string",
-        "rng:()=>number",
-        "memory?:StrategyMemory"
+  "methods": [
+    {
+      "name": "createStrategy",
+      "description": "The strategy over a poker-odds Odds object.",
+      "paramStructure": "by-position",
+      "params": [
+        {
+          "name": "deps",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "odds": {
+                "$ref": "#/components/schemas/OddsLike"
+              }
+            },
+            "required": [
+              "odds"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "name": "settings",
+          "required": false,
+          "schema": {
+            "$ref": "#/components/schemas/PartialStrategySettings"
+          },
+          "description": "Defaults to {} (difficulty 2, aggression 50)."
+        }
       ],
-      "returns": "Action|null (decide for an observation; null when there is no observation, it is not this player's turn, or the value is not a DecisionInput; never changes memory)"
+      "result": {
+        "name": "strategy",
+        "schema": {
+          "$ref": "#/components/schemas/Strategy"
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/BadDifficulty"
+        },
+        {
+          "$ref": "#/components/errors/BadAggression"
+        }
+      ]
     },
-    "decide": {
-      "arguments": [
-        "input:DecisionInput",
-        "rng:()=>number",
-        "memory?:StrategyMemory"
-      ],
-      "returns": "Action|null (null when legal.fold is false, that is when it is not this player's turn; a bet is always inside legal.bet)"
+    {
+      "name": "emptyStats",
+      "description": "A zeroed OpponentStats.",
+      "paramStructure": "by-position",
+      "params": [],
+      "result": {
+        "name": "stats",
+        "schema": {
+          "$ref": "#/components/schemas/OpponentStats"
+        }
+      }
     },
-    "observe": {
-      "arguments": [
-        "memory:StrategyMemory",
-        "observation:{street?:Street|null}|null",
-        "playerId:string",
-        "move:unknown"
-      ],
-      "returns": "StrategyMemory (the same object, changed in place; moves that are not fold, check, call or bet, such as show, are ignored)"
+    {
+      "name": "DEFAULT_SETTINGS",
+      "description": "The default settings.",
+      "paramStructure": "by-position",
+      "params": [],
+      "result": {
+        "name": "DEFAULT_SETTINGS",
+        "schema": {
+          "$ref": "#/components/schemas/StrategySettings"
+        }
+      },
+      "x-ourapps-property": true
     },
-    "learnHand": {
-      "arguments": [
-        "memory:StrategyMemory",
-        "playerIds:string[]"
+    {
+      "name": "Strategy.settings",
+      "description": "The checked settings.",
+      "paramStructure": "by-position",
+      "params": [],
+      "result": {
+        "name": "settings",
+        "schema": {
+          "$ref": "#/components/schemas/StrategySettings"
+        }
+      },
+      "x-ourapps-property": true
+    },
+    {
+      "name": "Strategy.newMemory",
+      "description": "A fresh, empty memory (plain JSON), owned and stored by the caller.",
+      "paramStructure": "by-position",
+      "params": [],
+      "result": {
+        "name": "memory",
+        "schema": {
+          "$ref": "#/components/schemas/StrategyMemory"
+        }
+      }
+    },
+    {
+      "name": "Strategy.choose",
+      "description": "Decide for an observation. Null when the observation is null or not a DecisionInput (for example when it is not this player's turn). Never changes memory.",
+      "paramStructure": "by-position",
+      "params": [
+        {
+          "name": "observation",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecisionInput"
+              },
+              {}
+            ]
+          },
+          "description": "What the game's observation returns for this player."
+        },
+        {
+          "name": "playerId",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "rng",
+          "required": true,
+          "schema": {
+            "description": "A function () => number. Returns a number in [0, 1)."
+          }
+        },
+        {
+          "name": "memory",
+          "required": false,
+          "schema": {
+            "$ref": "#/components/schemas/StrategyMemory"
+          },
+          "description": "Defaults to {}."
+        }
       ],
-      "returns": "void"
+      "result": {
+        "name": "action",
+        "schema": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/Action"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Strategy.decide",
+      "description": "The action to take; null when legal.fold is false, that is when it is not this player's turn. A bet is always inside legal.bet.",
+      "paramStructure": "by-position",
+      "params": [
+        {
+          "name": "input",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/DecisionInput"
+          }
+        },
+        {
+          "name": "rng",
+          "required": true,
+          "schema": {
+            "description": "A function () => number. Returns a number in [0, 1)."
+          }
+        },
+        {
+          "name": "memory",
+          "required": false,
+          "schema": {
+            "$ref": "#/components/schemas/StrategyMemory"
+          },
+          "description": "Defaults to {}."
+        }
+      ],
+      "result": {
+        "name": "action",
+        "schema": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/Action"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Strategy.observe",
+      "description": "Count how a player acted, for the read later decisions make on them. Changes memory in place and returns the same object; moves other than fold, check, call and bet (such as show) are ignored.",
+      "paramStructure": "by-position",
+      "params": [
+        {
+          "name": "memory",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/StrategyMemory"
+          }
+        },
+        {
+          "name": "observation",
+          "required": true,
+          "schema": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "street": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Street"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "description": "The observation the mover had; its street is used."
+        },
+        {
+          "name": "playerId",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "move",
+          "required": true,
+          "schema": {},
+          "description": "An Action, or any other move."
+        }
+      ],
+      "result": {
+        "name": "memory",
+        "schema": {
+          "$ref": "#/components/schemas/StrategyMemory"
+        }
+      }
+    },
+    {
+      "name": "Strategy.learnHand",
+      "description": "A hand was dealt to these players: counts a hand seen for each, in place.",
+      "paramStructure": "by-position",
+      "params": [
+        {
+          "name": "memory",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/StrategyMemory"
+          }
+        },
+        {
+          "name": "playerIds",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "result": {
+        "name": "nothing",
+        "schema": {
+          "type": "null",
+          "description": "Returns nothing (undefined in TypeScript, Unit in Kotlin, Void in Swift)."
+        }
+      }
     }
-  },
-  "settings": {
-    "difficulty": "integer 1 to 3; 1 samples little and ignores opponent reads, 2 is the recipe's reference player, 3 samples more and plays steadier",
-    "aggression": "integer 0 to 100; used when a Style gives no aggr"
-  },
-  "construction": {
-    "createStrategy": {
-      "arguments": [
-        "deps:{odds:{winChance(...)}}",
-        "settings?:{difficulty,aggression}"
-      ],
-      "returns": "Strategy"
+  ],
+  "components": {
+    "schemas": {
+      "Card": {
+        "type": "string",
+        "pattern": "^[2-9TJQKA][cdhs]$"
+      },
+      "Street": {
+        "type": "string",
+        "enum": [
+          "preflop",
+          "flop",
+          "turn",
+          "river"
+        ]
+      },
+      "Action": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "fold"
+              }
+            },
+            "required": [
+              "type"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "check"
+              }
+            },
+            "required": [
+              "type"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "call"
+              }
+            },
+            "required": [
+              "type"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "bet"
+              },
+              "to": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "type",
+              "to"
+            ],
+            "additionalProperties": false
+          }
+        ],
+        "description": "bet carries the total for the street."
+      },
+      "Style": {
+        "type": "object",
+        "properties": {
+          "tight": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "aggr": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "bluff": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "required": [
+          "tight",
+          "aggr",
+          "bluff"
+        ],
+        "additionalProperties": false,
+        "description": "How a player plays, 0 to 1 each; which player has which style belongs to the caller."
+      },
+      "OpponentStats": {
+        "type": "object",
+        "properties": {
+          "actions": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "aggressive": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "calls": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "folds": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "vpip": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "handsSeen": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "actions",
+          "aggressive",
+          "calls",
+          "folds",
+          "vpip",
+          "handsSeen"
+        ],
+        "additionalProperties": false
+      },
+      "StrategyMemory": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/components/schemas/OpponentStats"
+        },
+        "description": "Player id to how they have played."
+      },
+      "Opponent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "seat": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "bet": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalIn": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "lastAction": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "blind",
+                  "fold",
+                  "check",
+                  "call",
+                  "bet",
+                  "raise",
+                  "allIn"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "seat",
+          "bet",
+          "totalIn",
+          "lastAction"
+        ],
+        "additionalProperties": false,
+        "description": "An opponent still in the hand; bet is this street, totalIn this hand."
+      },
+      "DecisionInput": {
+        "type": "object",
+        "properties": {
+          "hole": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Card"
+            }
+          },
+          "board": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Card"
+            }
+          },
+          "street": {
+            "$ref": "#/components/schemas/Street"
+          },
+          "stack": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "bet": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "seat": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "button": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "seats": {
+            "type": "integer",
+            "minimum": 2
+          },
+          "sb": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "bb": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "currentBet": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "lastFullRaiseTo": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "pot": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "legal": {
+            "type": "object",
+            "properties": {
+              "fold": {
+                "type": "boolean",
+                "description": "True means it is this player's turn."
+              },
+              "check": {
+                "type": "boolean"
+              },
+              "call": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "bet": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "min": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "max": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "opening": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "min",
+                  "max",
+                  "opening"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "fold",
+              "check",
+              "call",
+              "bet"
+            ],
+            "additionalProperties": false
+          },
+          "opponents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Opponent"
+            }
+          },
+          "style": {
+            "type": "object",
+            "properties": {
+              "tight": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "aggr": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "bluff": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "hole",
+          "board",
+          "street",
+          "stack",
+          "bet",
+          "seat",
+          "button",
+          "seats",
+          "sb",
+          "bb",
+          "currentBet",
+          "lastFullRaiseTo",
+          "pot",
+          "legal",
+          "opponents"
+        ],
+        "additionalProperties": false,
+        "description": "What the strategy needs to know at its turn (holdem-rules' observation for that player)."
+      },
+      "StrategySettings": {
+        "type": "object",
+        "properties": {
+          "difficulty": {
+            "type": "integer",
+            "enum": [
+              1,
+              2,
+              3
+            ],
+            "default": 2,
+            "description": "1 samples little and ignores opponent reads, 2 is the reference player, 3 samples more and plays steadier."
+          },
+          "aggression": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "default": 50,
+            "description": "How readily it bets and raises, used when the style gives no aggr."
+          }
+        },
+        "required": [
+          "difficulty",
+          "aggression"
+        ],
+        "additionalProperties": false
+      },
+      "PartialStrategySettings": {
+        "type": "object",
+        "properties": {
+          "difficulty": {
+            "type": "integer",
+            "enum": [
+              1,
+              2,
+              3
+            ],
+            "default": 2,
+            "description": "1 samples little and ignores opponent reads, 2 is the reference player, 3 samples more and plays steadier."
+          },
+          "aggression": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "default": 50,
+            "description": "How readily it bets and raises, used when the style gives no aggr."
+          }
+        },
+        "additionalProperties": false
+      },
+      "OddsLike": {
+        "type": "object",
+        "description": "The part of poker-odds' Odds object the strategy calls.",
+        "properties": {
+          "winChance": {
+            "description": "A function winChance(hole: Card[], board: Card[], ranges: number | number[], trials: number, rng: () => number): number."
+          }
+        },
+        "required": [
+          "winChance"
+        ],
+        "x-ourapps-interface": "ae/poker-odds"
+      },
+      "Strategy": {
+        "type": "object",
+        "description": "The object createStrategy returns; its members are the `Strategy.<name>` methods."
+      }
+    },
+    "errors": {
+      "BadDifficulty": {
+        "code": 1001,
+        "message": "difficulty is 1, 2 or 3",
+        "data": {
+          "thrown": "RangeError"
+        }
+      },
+      "BadAggression": {
+        "code": 1002,
+        "message": "aggression is 0 to 100",
+        "data": {
+          "thrown": "RangeError"
+        }
+      }
     }
-  },
-  "notes": "The computer-players form is newMemory(), choose(observation, playerId, rng, memory) and observe(memory, observation, playerId, move): `observation` is a DecisionInput (what holdem-rules' observation returns for that player) and a move is an Action. decide(input, rng, memory) is choose without the player id."
+  }
 }

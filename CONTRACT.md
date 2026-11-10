@@ -19,14 +19,16 @@ The installer collects two optional integers:
 - `implementation/server/types.ts` -> `components/poker-strategy/server/types.ts`
 
 Dependencies: none.
-`tools.lock.json` pins verification tools: node 26.5.0. Licence wording remains deferred.
+`tools.lock.json` pins verification tools: node 26.5.0. Licence: `Apache-2.0` (`LICENCE`, `NOTICE`).
 
 ## Provided interfaces
-- `interfaces/player-strategy.json` defines `player-strategy` (ae/player-strategy) version 1.0.0.
+- `interfaces/player-strategy.json` defines `player-strategy` (ae/player-strategy) version 1.0.0: an OpenRPC 1.3.2 document, one method per function (a member of a created object is `<Type>.<member>`), with parameter, result and data types as JSON Schema 2020-12 (`components.schemas`) and thrown errors under `errors`.
 
 ## Required interfaces
 - `hand-ranking` (ae/hand-ranking) version 1.0.0, supplied by the recipe or application.
 - `poker-odds` (ae/poker-odds) version 1.0.0, supplied by the recipe or application.
+
+Each `interfaces/required-<id>.json` is a byte copy of the providing component's document.
 
 ## Integration
 Create it with `createStrategy({ odds }, { difficulty, aggression })`, where `odds` is the poker-odds interface (which itself needs hand-ranking). computer-players calls `decide` when it is a bot's turn and applies the returned action through the game rules; it calls `observe` after every action and `learnHand` after each deal, keeping the memory object between calls. The caller gives each bot an optional style (tight, aggr, bluff from 0 to 1); without one the style is neutral and aggression comes from the setting. computer-players uses the three-operation form: `newMemory()` for a fresh memory, `choose(observation, playerId, rng, memory)` (the observation is the `DecisionInput` the game rules give for that player; null or anything else is no decision) and `observe(memory, observation, playerId, move)` after every move (counts the mover and returns the memory). `decide(input, rng, memory)` is `choose` without the player id.

@@ -1,0 +1,497 @@
+{
+  "openrpc": "1.3.2",
+  "info": {
+    "title": "ae/poker-odds",
+    "version": "1.0.0",
+    "description": "What a player's hand can still become, and the chance of holding the best hand. `rows`: the hand already made with the known cards first at 100%, then every way of making a better hand with the exact chance that its needed cards turn up by the river; which ways exist is read from every board that can follow from the flop on, and from a fixed sample of boards before it. `winChance`: the chance of the best hand against opponents, by sampling. TypeScript, `implementation/server/index.ts` (odds.ts, types.ts). Build with createOdds(ranking, settings); methods named `Odds.<name>` are members of the object it returns."
+  },
+  "methods": [
+    {
+      "name": "createOdds",
+      "description": "The odds operations over a hand ranking.",
+      "paramStructure": "by-position",
+      "params": [
+        {
+          "name": "ranking",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/HandRanking"
+          }
+        },
+        {
+          "name": "settings",
+          "required": false,
+          "schema": {
+            "$ref": "#/components/schemas/PartialOddsSettings"
+          },
+          "description": "Defaults to {} (sampleBoards 2000, cacheSize 500)."
+        }
+      ],
+      "result": {
+        "name": "odds",
+        "schema": {
+          "$ref": "#/components/schemas/Odds"
+        }
+      }
+    },
+    {
+      "name": "DEFAULT_SETTINGS",
+      "description": "The default settings.",
+      "paramStructure": "by-position",
+      "params": [],
+      "result": {
+        "name": "DEFAULT_SETTINGS",
+        "schema": {
+          "$ref": "#/components/schemas/OddsSettings"
+        }
+      },
+      "x-ourapps-property": true
+    },
+    {
+      "name": "Odds.rows",
+      "description": "The made hand first, then every better way with the exact chance it arrives by the river, most likely first; rows under 0.2% are dropped. Empty unless there are two hole cards. The same cards give the same rows (cached).",
+      "paramStructure": "by-position",
+      "params": [
+        {
+          "name": "hole",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Card"
+            }
+          },
+          "description": "The viewer's two cards."
+        },
+        {
+          "name": "board",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Card"
+            },
+            "maxItems": 5
+          },
+          "description": "0, 3, 4 or 5 board cards."
+        },
+        {
+          "name": "trials",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "description": "Boards to sample before the flop; defaults to sampleBoards."
+        }
+      ],
+      "result": {
+        "name": "rows",
+        "schema": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/OddsRow"
+          }
+        }
+      }
+    },
+    {
+      "name": "Odds.chance",
+      "description": "The exact chance that the needed cards are among the cards still to come.",
+      "paramStructure": "by-position",
+      "params": [
+        {
+          "name": "category",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/RowCategory"
+          }
+        },
+        {
+          "name": "needed",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Needed"
+            }
+          }
+        },
+        {
+          "name": "known",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Card"
+            }
+          },
+          "description": "Every card already seen."
+        },
+        {
+          "name": "toCome",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "description": "How many cards are still to come."
+        }
+      ],
+      "result": {
+        "name": "probability",
+        "schema": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    {
+      "name": "Odds.shownCards",
+      "description": "A shown hand's combination in reading order, then the first kickers.",
+      "paramStructure": "by-position",
+      "params": [
+        {
+          "name": "hole",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Card"
+            }
+          }
+        },
+        {
+          "name": "board",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Card"
+            }
+          }
+        },
+        {
+          "name": "kickers",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "description": "How many kickers to add."
+        }
+      ],
+      "result": {
+        "name": "cards",
+        "schema": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/OddsCard"
+          }
+        }
+      }
+    },
+    {
+      "name": "Odds.winChance",
+      "description": "The chance of holding the best hand at the river, by sampling; a tie counts as a share.",
+      "paramStructure": "by-position",
+      "params": [
+        {
+          "name": "hole",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Card"
+            }
+          }
+        },
+        {
+          "name": "board",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Card"
+            }
+          }
+        },
+        {
+          "name": "ranges",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            ]
+          },
+          "description": "A count of unconstrained opponents, or per opponent the lowest starting score they are assumed to hold."
+        },
+        {
+          "name": "trials",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        {
+          "name": "rng",
+          "required": true,
+          "schema": {
+            "description": "A function () => number. Returns a number in [0, 1)."
+          }
+        }
+      ],
+      "result": {
+        "name": "probability",
+        "schema": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    {
+      "name": "Odds.startingScore",
+      "description": "Chen's pre-flop score for two cards: high card, pair, suited and connected.",
+      "paramStructure": "by-position",
+      "params": [
+        {
+          "name": "cards",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Card"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "description": "Two cards."
+        }
+      ],
+      "result": {
+        "name": "score",
+        "schema": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 20
+        }
+      }
+    }
+  ],
+  "components": {
+    "schemas": {
+      "Card": {
+        "type": "string",
+        "pattern": "^[2-9TJQKA][cdhs]$",
+        "description": "Two characters: rank 2-9, T, J, Q, K, A then suit c, d, h, s."
+      },
+      "RowCategory": {
+        "type": "string",
+        "enum": [
+          "royalFlush",
+          "straightFlush",
+          "fourOfAKind",
+          "fullHouse",
+          "flush",
+          "straight",
+          "threeOfAKind",
+          "twoPair",
+          "pair",
+          "highCard"
+        ],
+        "description": "Categories as rows, best first; a royal flush has its own row."
+      },
+      "OddsCard": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Card"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rank": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "suit": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "from": {
+            "type": "string",
+            "enum": [
+              "hole",
+              "board",
+              "needed"
+            ]
+          },
+          "spare": {
+            "type": "boolean",
+            "description": "A kicker that fills the five without being part of the pattern."
+          }
+        },
+        "required": [
+          "code",
+          "rank",
+          "suit",
+          "from",
+          "spare"
+        ],
+        "additionalProperties": false,
+        "description": "A card of a possible hand, in reading order: a known card (code) from the viewer's hand or the board, or one still to come (from needed, code null) known by rank, suit, both or neither."
+      },
+      "OddsRow": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/RowCategory"
+          },
+          "rank": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10,
+            "description": "1 is a royal flush."
+          },
+          "probability": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "1 for the hand already made."
+          },
+          "cards": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OddsCard"
+            }
+          },
+          "more": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "category",
+          "rank",
+          "probability",
+          "cards",
+          "more"
+        ],
+        "additionalProperties": false,
+        "description": "One way the viewer's hand can finish."
+      },
+      "Needed": {
+        "type": "object",
+        "properties": {
+          "rank": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "suit": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "rank",
+          "suit"
+        ],
+        "additionalProperties": false
+      },
+      "OddsSettings": {
+        "type": "object",
+        "properties": {
+          "sampleBoards": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 2000,
+            "description": "Boards sampled before the flop (more than two cards still to come)."
+          },
+          "cacheSize": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 500,
+            "description": "Results kept for the same cards."
+          }
+        },
+        "required": [
+          "sampleBoards",
+          "cacheSize"
+        ],
+        "additionalProperties": false
+      },
+      "PartialOddsSettings": {
+        "type": "object",
+        "properties": {
+          "sampleBoards": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 2000,
+            "description": "Boards sampled before the flop (more than two cards still to come)."
+          },
+          "cacheSize": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 500,
+            "description": "Results kept for the same cards."
+          }
+        },
+        "additionalProperties": false
+      },
+      "HandRanking": {
+        "type": "object",
+        "description": "The members of a hand-ranking's HandRanking object that odds reads; its card codes come from the card-deck the ranking was built with.",
+        "x-ourapps-interface": "ae/hand-ranking",
+        "properties": {
+          "codes": {
+            "type": "object",
+            "description": "CardCodes of card-deck: ranks, suits, rankOf(card), suitOf(card), fullDeck()."
+          },
+          "evaluate": {
+            "description": "A function evaluate(cards: Card[]): Evaluation."
+          },
+          "bestFive": {
+            "description": "A function bestFive(cards: Card[], evaluation: Evaluation): Card[]."
+          },
+          "patternCards": {
+            "description": "A function patternCards(five: Card[], evaluation: Evaluation): Card[]."
+          }
+        },
+        "required": [
+          "codes",
+          "evaluate",
+          "bestFive",
+          "patternCards"
+        ]
+      },
+      "Odds": {
+        "type": "object",
+        "description": "The object createOdds returns; its members are the `Odds.<name>` methods."
+      }
+    }
+  }
+}
