@@ -18,5 +18,5 @@ No accounts or keys. `difficulty` is 1, 2 or 3 (default 2, the recipe's referenc
 ## How to check
 From the component directory:
 
-- `node --test tests/server.test.ts` (web, required-local; tools: node 26.5.0)
-- `python3.12 -B /Users/george/Projects/com/my/tools/check_component.py components/poker-strategy` validates the manifest, sidecars and runs the required-local suite.
+- `node --test tests/server.test.ts` (web, required-local; tools: node 26.5)
+- `python3 -m aepm review <digest> --store STORE --policy POLICY --trusted --allow-network` checks an archive fetched with `python3 -m aepm fetch ourapps-ae/poker-strategy@VERSION --store STORE --from https://ourapps.app` and runs its suites.

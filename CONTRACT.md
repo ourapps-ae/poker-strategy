@@ -19,7 +19,7 @@ The installer collects two optional integers:
 - `implementation/server/types.ts` -> `components/poker-strategy/server/types.ts`
 
 Dependencies: none.
-`tools.lock.json` pins verification tools: node 26.5.0. Licence: `Apache-2.0` (`LICENCE`, `NOTICE`).
+`tools.lock.json` pins verification tools: node 26.5. Licence: `Apache-2.0` (`LICENCE`, `NOTICE`).
 
 ## Provided interfaces
 - `interfaces/player-strategy.json` defines `player-strategy` (ae/player-strategy) version 1.0.0: an OpenRPC 1.3.2 document, one method per function (a member of a created object is `<Type>.<member>`), with parameter, result and data types as JSON Schema 2020-12 (`components.schemas`) and thrown errors under `errors`.
@@ -42,7 +42,7 @@ No deployed service, account or key. CPU only: a decision samples 200 to 900 boa
 ## Verification
 `node --test tests/server.test.ts` checks turn handling, setting validation, bet sizing, clamping to the legal range and rounding to the small blind, calling and folding against pot odds, short-stack pushing, the effect of aggression and style, the sampling and range reading of each difficulty, memory-based reads, observe and learnHand counts, and real-odds decisions. The extraction at difficulty 2 was compared with the recipe's botAction on 400 random spots (all streets, short and deep stacks, with and without memory and styles): identical actions with the same random sequence. It also checks `newMemory`, `choose` (the same move as `decide`, null for nothing to decide, memory unchanged, bets inside the legal range with real odds) and `observe` (counts per mover, ignored moves, plain-JSON memory).
 
-- `node --test tests/server.test.ts` (web, required-local; tools: node 26.5.0)
+- `node --test tests/server.test.ts` (web, required-local; tools: node 26.5)
 
 ## Scenarios and presentation
 A table of four people and two computer players: each computer player is given a style by name, decides in its turn and its action is applied. A teaching table sets difficulty 1 for gentle opponents. A tournament raises difficulty to 3 for the final table.
