@@ -3,7 +3,7 @@
 ## For the agent
 Select this component when the recipe includes computer players. Connect its hand-ranking and poker-odds inputs, and connect its player-strategy output to computer-players. Map the recipe's 'computer players' difficulty answer to `difficulty` and a general 'how bold' answer to `aggression`.
 
-- Select package `ourapps-ae/poker-strategy` version `0.4.0`.
+- Select package `ourapps-ae/poker-strategy` version `0.4.1`.
 - Settings to configure:
   - `difficulty` (integer; optional; default `2`)
   - `aggression` (integer; optional; default `50`)

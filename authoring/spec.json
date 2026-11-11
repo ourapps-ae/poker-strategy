@@ -1,6 +1,6 @@
 {
   "name": "poker-strategy",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "title": "Poker strategy",
   "description": "Decisions for computer poker players: win chance by simulation, pot odds, position, a style and a memory of how each opponent has played. Difficulty 1 to 3 and aggression.",
   "facilities": [
