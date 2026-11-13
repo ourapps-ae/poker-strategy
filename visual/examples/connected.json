@@ -12,7 +12,7 @@
       "kind": "component",
       "status": "example",
       "package": "ourapps-ae/poker-strategy",
-      "version": "0.4.1",
+      "version": "0.5.0",
       "ports": [
         {
           "id": "hand-ranking",
