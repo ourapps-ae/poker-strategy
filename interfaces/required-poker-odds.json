@@ -32,7 +32,12 @@
         "schema": {
           "$ref": "#/components/schemas/Odds"
         }
-      }
+      },
+      "tags": [
+        {
+          "name": "typescript"
+        }
+      ]
     },
     {
       "name": "DEFAULT_SETTINGS",
@@ -45,7 +50,12 @@
           "$ref": "#/components/schemas/OddsSettings"
         }
       },
-      "x-ourapps-property": true
+      "x-ourapps-property": true,
+      "tags": [
+        {
+          "name": "typescript"
+        }
+      ]
     },
     {
       "name": "Odds.rows",
@@ -93,7 +103,12 @@
             "$ref": "#/components/schemas/OddsRow"
           }
         }
-      }
+      },
+      "tags": [
+        {
+          "name": "typescript"
+        }
+      ]
     },
     {
       "name": "Odds.chance",
@@ -146,7 +161,12 @@
           "minimum": 0,
           "maximum": 1
         }
-      }
+      },
+      "tags": [
+        {
+          "name": "typescript"
+        }
+      ]
     },
     {
       "name": "Odds.shownCards",
@@ -191,7 +211,12 @@
             "$ref": "#/components/schemas/OddsCard"
           }
         }
-      }
+      },
+      "tags": [
+        {
+          "name": "typescript"
+        }
+      ]
     },
     {
       "name": "Odds.winChance",
@@ -260,7 +285,12 @@
           "minimum": 0,
           "maximum": 1
         }
-      }
+      },
+      "tags": [
+        {
+          "name": "typescript"
+        }
+      ]
     },
     {
       "name": "Odds.startingScore",
@@ -288,7 +318,12 @@
           "minimum": -1,
           "maximum": 20
         }
-      }
+      },
+      "tags": [
+        {
+          "name": "typescript"
+        }
+      ]
     }
   ],
   "components": {
@@ -493,5 +528,8 @@
         "description": "The object createOdds returns; its members are the `Odds.<name>` methods."
       }
     }
+  },
+  "x-ourapps-modules": {
+    "server": "server/index.ts"
   }
 }

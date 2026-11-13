@@ -49,6 +49,11 @@
         {
           "$ref": "#/components/errors/BadAggression"
         }
+      ],
+      "tags": [
+        {
+          "name": "typescript"
+        }
       ]
     },
     {
@@ -61,7 +66,12 @@
         "schema": {
           "$ref": "#/components/schemas/OpponentStats"
         }
-      }
+      },
+      "tags": [
+        {
+          "name": "typescript"
+        }
+      ]
     },
     {
       "name": "DEFAULT_SETTINGS",
@@ -74,7 +84,12 @@
           "$ref": "#/components/schemas/StrategySettings"
         }
       },
-      "x-ourapps-property": true
+      "x-ourapps-property": true,
+      "tags": [
+        {
+          "name": "typescript"
+        }
+      ]
     },
     {
       "name": "Strategy.settings",
@@ -87,7 +102,12 @@
           "$ref": "#/components/schemas/StrategySettings"
         }
       },
-      "x-ourapps-property": true
+      "x-ourapps-property": true,
+      "tags": [
+        {
+          "name": "typescript"
+        }
+      ]
     },
     {
       "name": "Strategy.newMemory",
@@ -99,7 +119,12 @@
         "schema": {
           "$ref": "#/components/schemas/StrategyMemory"
         }
-      }
+      },
+      "tags": [
+        {
+          "name": "typescript"
+        }
+      ]
     },
     {
       "name": "Strategy.choose",
@@ -154,7 +179,12 @@
             }
           ]
         }
-      }
+      },
+      "tags": [
+        {
+          "name": "typescript"
+        }
+      ]
     },
     {
       "name": "Strategy.decide",
@@ -196,7 +226,12 @@
             }
           ]
         }
-      }
+      },
+      "tags": [
+        {
+          "name": "typescript"
+        }
+      ]
     },
     {
       "name": "Strategy.observe",
@@ -253,7 +288,12 @@
         "schema": {
           "$ref": "#/components/schemas/StrategyMemory"
         }
-      }
+      },
+      "tags": [
+        {
+          "name": "typescript"
+        }
+      ]
     },
     {
       "name": "Strategy.learnHand",
@@ -284,7 +324,12 @@
           "type": "null",
           "description": "Returns nothing (undefined in TypeScript, Unit in Kotlin, Void in Swift)."
         }
-      }
+      },
+      "tags": [
+        {
+          "name": "typescript"
+        }
+      ]
     }
   ],
   "components": {
@@ -721,5 +766,8 @@
         }
       }
     }
+  },
+  "x-ourapps-modules": {
+    "server": "server/index.ts"
   }
 }
